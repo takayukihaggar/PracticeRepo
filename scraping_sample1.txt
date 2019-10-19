@@ -1,0 +1,48 @@
+# This source code is for my crawler and scraping learning.
+# As for learning Anemone, I mainly refer to the following books.
+# "Rubyによるクローラー開発技法-巡回・解析機能の実装と21の運用例"
+# 著：佐々木 拓郎, 出版社: SBクリエイティブ, ASIN: B00TO6KMEK
+
+
+# -*- coding: utf-8 -*-
+
+require 'anemone'
+require 'nokogiri'
+require 'kconv'
+
+# 対象サイト：Amazonの本 ランキングを想定する。
+
+urls = []
+urls.push("https://www.hogehoge")
+urls.push("https://www.fugafuga")
+
+# AmazonからのHTMLをもとに、対象を抽出する。
+# xpathの情報取得は、Chromeブラウザからおこなった。
+
+Anemone.crawl(urls, :depth_limit => 0) do |anemone|
+  anemone.on_every_page do |page|
+
+# 文字コードをutf-8で変換したうえで、Nokogiriでパースをおこなう。
+
+    doc = Nokogiri::HTML.parse(page.body.toutf8)
+
+    category = doc.xpath("//*[@id=\"zg_browseRoot\"]/ul/li/a").text
+    sub_category = doc.xpath("//*[@id=\"zg_browseRoot\"]/ul/ul/li/span").text
+
+    puts category + "/" + sub_category
+
+    items = doc.xpath("//*[@id=\"zg-center-div\"]")
+    items += doc.xpath("//*[@id=\"zg-right-col\"]")
+
+    items.each{|item|
+      puts item.xpath("//*[@id=\"zg-ordered-list\"]/li[2]/span/div/div/span[1]/span").text # 順位
+      puts item.xpath("//*[@id=\"zg-ordered-list\"]/li[2]/span/div/span/a/div").text # 書名
+
+      puts item.xpath("//*[@id=\"zg-ordered-list\"]/li[1]/span/div/span").attribute("href").text.math(%r{dp/(.+?)/})[1]　# ASIN。URLからhref部分を取り出して、該当部分を正規表現で抽出
+    }
+  end
+end
+
+# 対象サイトの本のカテゴリおよび、ランキング順位、書名を抽出
+# 上記の項目をもとに、scraping_sample2 で、配列、ハッシュ、CSVの扱いについての学習をまとめる。
+

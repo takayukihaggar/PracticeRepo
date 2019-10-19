@@ -1,0 +1,227 @@
+# In the "scraping_sample1.rb" above, the book ranking, title, and ASIN were taken from the Amazon site ranking.
+# Based on these items, at the scraping_sample2, I summarize what I have learned about how to handle CSV, Array and hash.
+# I have practiced these things with the assumption of using for business.
+
+
+# data.csvを下記とする。
+# title, ranking, asin
+# ブログの成功技術 , 1, B06XF394FN
+# アフターデジタル, 2, 4296101625
+# ソフトウェア・ファースト, 3, 4822289915
+# 沈黙のWebライティング, 4, 4844366238
+# 5Gビジネス, 5, 4532114071
+
+
+# foreeachで一行ずつ読み込む
+
+require 'csv'
+
+CSV.foreach("data.csv") do |row|
+  p row
+end
+
+# コンソールに以下と出力される
+[ "title", "ranking", "asin" ]
+[ "ブログの成功技術" , 1, "B06XF394FN" ]
+[ "アフターデジタル", 2, "4296101625" ]
+[ "ソフトウェア・ファースト", 3, "4822289915" ]
+[ "沈黙のWebライティング", 4, "4844366238" ]
+[ "5Gビジネス", 5, "4532114071" ]
+
+
+---------------------------------
+
+# generateメソッドで、csv形式のデータを生成する
+
+require 'CSV'
+
+headers = [ "title", "ranking", "asin" ]
+rows = [[ "ブログの成功技術" , 1, "B06XF394FN" ], [ "アフターデジタル", 2, "4296101625" ], [ "ソフトウェア・ファースト", 3, "4822289915" ], [ "沈黙のWebライティング", 4, "4844366238" ], [ "5Gビジネス", 5, "4532114071" ]]
+csv_data = CSV.generate() do |csv|
+  csv << headers
+    rows.each do |row|
+ 　   csv << row
+  end
+end
+
+p csv_data
+
+
+------------------------------------
+
+# ヘッダありのデータを扱う
+# ヘッダをヘッダとして扱うためには、ファイル読み込み時に、オプション設定をする。open(CSVファイル, モード, headers: true)
+
+# 1 データの1行目を、ヘッダ扱いにする。
+CSV.open("data.csv", headers: true)  do |csv|
+  csv.each do |row|
+    p row["title"]
+  end
+end
+
+# 2 ヘッダを別のものとして追加する。headers: オプション設定で記載をする
+CSV.open("data.csv", headers: "title", "ranking", "asin")  do |csv|
+  csv.each do |row|
+    p row["title"]
+  end
+end
+
+
+------------------------------------
+
+# readメソッドでcsv全体を読み込む
+# readメソッドを使用してcsv全体を読み込むと、すべての要素が二次元の配列として読み込まれる
+
+require 'csv'
+
+p CSV.read("data.csv")
+
+# このコードを実行すると、以下のように二次元配列として出力されます。
+
+rows = [[ "title", "ranking", "asin" ], [ "ブログの成功技術" , 1, "B06XF394FN" ], [ "アフターデジタル", 2, "4296101625" ], [ "ソフトウェア・ファースト", 3, "4822289915" ], [ "沈黙のWebライティング", 4, "4844366238" ], [ "5Gビジネス", 5, "4532114071" ]]
+
+# 二次元の配列なので、二次元で要素を指定して取り出すことが可能です。
+
+require 'csv'
+
+p CSV.read("data.csv")[0] => [ "title", "ranking", "asin" ]　# 配列の0番目を指定
+
+p CSV.read("data.csv")[1][0]=> [ "ブログの成功技術" ] # 配列の１番目の中の、0番目を指定
+
+
+------------------------------------
+
+# csvファイルに書き込む方法
+# 書き込みにはopenメソッド
+# 第一引数には書き込むファイル名を指定し、第二引数にはモードを選択
+
+require 'csv'
+
+CSV.open("data.csv", "w") do |test|
+  test << ["ブログの書き方講座", 6 ,"B07C61Q5T5"]
+end
+
+
+------------------------------------
+
+# tableメソッドで「ヘッダー」「列」「行」の三つを取得できる
+
+require 'csv'
+
+csv = CSV.table("data.csv")
+p csv.headers  # headersメソッド
+p csv[1] 
+p csv[:title]
+
+=> [ :title, :ranking, :asin]
+=> <CSV::Row title:"アフターデジタル" ranking:2 asin:"4296101625">
+=> [ "ブログの成功技術" , "アフターデジタル", "ソフトウェア・ファースト", "沈黙のWebライティング", "5Gビジネス" ]
+
+------------------------------------
+
+# ハッシュをCSVファイルへ保存
+# headerで定義された、ヘッダ付きのCSVファイルとして保存が可能
+# ハッシュを配列にするには、to_aメソッドが利用できる
+
+require "csv"
+
+header = ["title", "ranking"]
+
+am = {"ブログの成功技術"=>1, "アフターデジタル"=>2, "ソフトウェア・ファースト"=>3, "沈黙のWebライティング"=>4, "5Gビジネス"=>5}
+
+CSV.open("from_hash.csv","w") do |csv|
+  csv << header
+  am.to_a.each do |row|
+    csv << row
+  end
+end
+
+------------------------------------
+
+# 行と列を入れ替えたい場合、transposeメソッド
+
+require 'csv'
+
+product1 = CSV.read("sample.csv")
+product2 = product1.transpose
+p product2
+
+# product1
+# apple, 700
+# banana, 300
+# mango, 1200
+
+# 実行結果
+p product2
+=> [["apple", "banana", "mango"], [" 700", " 300", " 1200"]]
+
+------------------------------------
+
+# MySQLの操作
+
+# データベースの生成
+CREATE DATABASE AMRANKING;
+# データベースの削除
+DROP DATABASE AMRANKING;
+
+# データベースの一覧の取得
+SHOW DATABASES;
+# カレントのデータベースの変更（移動）
+USE AMRANKING;
+
+# CREATE TABLEの書式
+CREATE TABLE AMRANKING;
+
+------------------------------------
+
+# 1.データベースSCHOOLを作成
+CREATE DATABASE SCHOOL;
+ 
+# 2.データベースをSCHOOLに切り替える
+USE SCHOOL;
+ 
+# 3.テーブルstudentを作成
+CREATE TABLE student(
+    id      int PRIMARY KEY,
+    name    varchar(128),
+    grade   int
+);
+ 
+# 4.データの挿入
+INSERT INTO student (id,name,grade) VALUES(1001,'山田太郎',1);
+INSERT INTO student (id,name,grade) VALUES(2001,'太田隆',2);
+
+# 5.すべての列の情報を表示
+SELECT * FROM student;
+
+# 6.studentテーブルの、idと名前の列をすべて表示
+SELECT id,name FROM student;
+
+------------------------------------
+
+# WHEREによる検索
+SELECT name,price FROM resource WHERE class='text';
+
+SELECT name,price FROM resource WHERE price >= 3000 AND price < 5000;
+
+SELECT name,price FROM resource WHERE class='text' OR class='pbbk';
+
+# BETWEENを用いた例
+# priceが2000から5000の間の行を検索し、そのnameとpriceを表示
+SELECT name,price FROM resource WHERE price BETWEEN 2000 AND 5000;
+
+# INを用いた例
+# INが「sftw」か「pbbk」の行のname,およびpriceを取得
+SELECT name,price FROM resource WHERE class IN ('sftw','pbbk');
+
+# LIKEを用いた例
+# '_'の場合は、「1文字の任意の文字」
+SELECT name,price FROM resource WHERE code LIKE '1001%';
+
+# ORDER BYによる並べ替え
+SELECT * FROM resource ORDER BY price ASC;
+SELECT * FROM resource ORDER BY price DESC;
+
+
+
+
